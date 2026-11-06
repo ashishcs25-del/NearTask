@@ -1,44 +1,95 @@
+
 "use client";
 
-import { createContext, useContext, useState } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+} from "react";
 
-const BookingContext = createContext();
+const BookingContext = createContext(null);
 
 export function BookingProvider({ children }) {
-  const [bookings, setBookings] = useState([
-    {
-      id: 1,
-      customerName: "Rahul Sharma",
-      serviceName: "Home Cleaning",
-      date: "12 Nov 2026",
-      time: "10:00 AM",
-      status: "Pending",
-    },
-    {
-      id: 2,
-      customerName: "Priya Singh",
-      serviceName: "AC Repair",
-      date: "10 Nov 2026",
-      time: "2:00 PM",
-      status: "Accepted",
-    },
-  ]);
+  const [bookings, setBookings] = useState([]);
+  const [isLoaded, setIsLoaded] = useState(false);
 
+  // Load bookings from localStorage
+  useEffect(() => {
+    try {
+      const savedBookings = localStorage.getItem("neartask-bookings");
+
+      if (savedBookings) {
+        const parsedBookings = JSON.parse(savedBookings);
+
+        if (Array.isArray(parsedBookings)) {
+          setBookings(parsedBookings);
+        }
+      }
+    } catch (error) {
+      console.error("Error loading bookings:", error);
+    } finally {
+      setIsLoaded(true);
+    }
+  }, []);
+
+  // Save bookings after initial loading
+  useEffect(() => {
+    if (!isLoaded) return;
+
+    try {
+      localStorage.setItem(
+        "neartask-bookings",
+        JSON.stringify(bookings)
+      );
+    } catch (error) {
+      console.error("Error saving bookings:", error);
+    }
+  }, [bookings, isLoaded]);
+
+  // Add a new booking
   function addBooking(booking) {
-    setBookings((prev) => [
-      ...prev,
-      {
-        id: Date.now(),
-        ...booking,
-        status: "Pending",
-      },
+    const newBooking = {
+      ...booking,
+      id: Date.now(),
+      status: "Pending",
+    };
+
+    setBookings((previousBookings) => [
+      ...previousBookings,
+      newBooking,
     ]);
+
+    return newBooking;
   }
 
-  function updateBookingStatus(id, status) {
-    setBookings((prev) =>
-      prev.map((booking) =>
-        booking.id === id ? { ...booking, status } : booking
+  // Update booking status
+  function updateBookingStatus(id, newStatus) {
+    const allowedStatuses = [
+      "Pending",
+      "Accepted",
+      "Rejected",
+      "Completed",
+    ];
+
+    if (!allowedStatuses.includes(newStatus)) {
+      return;
+    }
+
+    setBookings((previousBookings) =>
+      previousBookings.map((booking) =>
+        booking.id === id
+          ? { ...booking, status: newStatus }
+          : booking
+      )
+    );
+  }
+
+  // Delete a booking
+  function deleteBooking(id) {
+    setBookings((previousBookings) =>
+      previousBookings.filter(
+        (booking) => booking.id !== id
       )
     );
   }
@@ -49,6 +100,8 @@ export function BookingProvider({ children }) {
         bookings,
         addBooking,
         updateBookingStatus,
+        deleteBooking,
+        isLoaded,
       }}
     >
       {children}
@@ -56,6 +109,15 @@ export function BookingProvider({ children }) {
   );
 }
 
+// Custom hook
 export function useBookings() {
-  return useContext(BookingContext);
+  const context = useContext(BookingContext);
+
+  if (!context) {
+    throw new Error(
+      "useBookings must be used inside BookingProvider"
+    );
+  }
+
+  return context;
 }
