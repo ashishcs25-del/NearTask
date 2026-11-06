@@ -1,20 +1,44 @@
-
 "use client";
 
 import { useState } from "react";
+
+// Get today's date in the user's local timezone (not UTC)
+function getLocalDateString() {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, "0");
+  const day = String(today.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+}
 
 export default function BookingForm({ service, onBookingSubmit }) {
   const [customerName, setCustomerName] = useState("");
   const [date, setDate] = useState("");
   const [description, setDescription] = useState("");
+  const [error, setError] = useState("");
 
   function handleSubmit(e) {
     e.preventDefault();
 
+    const today = getLocalDateString();
+
+    if (date < today) {
+      setError("Please select today or a future date.");
+      return;
+    }
+
+    if (!customerName.trim() || !description.trim()) {
+      setError("Please fill in all the required fields.");
+      return;
+    }
+
+    setError("");
+
     const booking = {
-      customerName,
+      customerName: customerName.trim(),
       date,
-      description,
+      description: description.trim(),
       serviceId: service.id,
       serviceName: service.name,
       providerName: service.provider,
@@ -61,11 +85,18 @@ export default function BookingForm({ service, onBookingSubmit }) {
         <input
           type="date"
           value={date}
-          onChange={(e) => setDate(e.target.value)}
-          min={new Date().toISOString().split("T")[0]}
+          onChange={(e) => {
+            setDate(e.target.value);
+            setError("");
+          }}
+          min={getLocalDateString()}
           required
           className={inputStyle}
         />
+
+        <p className="text-xs text-gray-500 mt-1">
+          You can choose today or any future date.
+        </p>
       </div>
 
       <div>
@@ -82,6 +113,12 @@ export default function BookingForm({ service, onBookingSubmit }) {
           className={`${inputStyle} resize-y`}
         />
       </div>
+
+      {error && (
+        <p className="text-sm text-red-600" role="alert">
+          {error}
+        </p>
+      )}
 
       <button
         type="submit"

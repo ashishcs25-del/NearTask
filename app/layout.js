@@ -1,7 +1,9 @@
 
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+
 import { BookingProvider } from "@/context/BookingContext";
+import { ServiceProvider } from "@/context/ServiceContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -26,7 +28,9 @@ export default function RootLayout({ children }) {
     >
       <body className="min-h-full flex flex-col">
         <BookingProvider>
-          {children}
+          <ServiceProvider>
+            {children}
+          </ServiceProvider>
         </BookingProvider>
       </body>
     </html>

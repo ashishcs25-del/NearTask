@@ -10,20 +10,25 @@ const categories = [
 
 export default function CategoryFilter({ selected, setSelected }) {
   return (
-    <div className="flex flex-wrap justify-center gap-3 my-6">
-      {categories.map((category) => (
-        <button
-          key={category}
-          onClick={() => setSelected(category)}
-          className={`px-4 py-2 rounded-full text-sm font-medium transition ${
-            selected === category
-              ? "bg-blue-600 text-white"
-              : "bg-gray-100 text-gray-700 hover:bg-blue-100"
-          }`}
-        >
-          {category}
-        </button>
-      ))}
+    <div className="my-6 flex flex-wrap justify-center gap-3">
+      {categories.map((category) => {
+        const isSelected = selected === category;
+
+        return (
+          <button
+            key={category}
+            onClick={() => setSelected(category)}
+            aria-pressed={isSelected}
+            className={`rounded-full border px-5 py-2.5 text-sm font-semibold transition-all duration-200 ${
+              isSelected
+                ? "border-[#285B3F] bg-[#285B3F] text-white shadow-md"
+                : "border-[#D5DFC9] bg-[#FFFEFA] text-[#285B3F] hover:border-[#285B3F] hover:bg-[#E7EDDF]"
+            }`}
+          >
+            {category}
+          </button>
+        );
+      })}
     </div>
   );
 }
